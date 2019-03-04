@@ -36,7 +36,7 @@ the specific language governing permissions and limitations under the License.
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
+    <!-- <uses-permission android:name="android.permission.SEND_SMS" /> -->
 
     <!-- Normal permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -202,9 +202,6 @@ the specific language governing permissions and limitations under the License.
             android:name=".activities.GeoPointMapActivity"
             android:configChanges="orientation" />
         <activity
-            android:name=".activities.GeoPointOsmMapActivity"
-            android:configChanges="orientation" />
-        <activity
             android:name=".activities.GeoShapeActivity"
             android:configChanges="orientation" />
         <activity
@@ -276,22 +273,5 @@ the specific language governing permissions and limitations under the License.
         <activity android:name=".activities.WebViewActivity" />
         <activity android:name=".activities.CaptureSelfieVideoActivity" />
         <activity android:name=".activities.CaptureSelfieVideoActivityNewApi" />
-
-        <receiver
-            android:name=".tasks.sms.SmsSentBroadcastReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="org.odk.collect.android.COLLECT_SMS_SEND_ACTION" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".tasks.sms.SmsNotificationReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="org.odk.collect.android.COLLECT_SMS_NOTIFICATION_ACTION" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

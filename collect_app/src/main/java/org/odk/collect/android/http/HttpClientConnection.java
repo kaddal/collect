@@ -26,7 +26,6 @@ import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.utilities.FileUtils;
-import org.odk.collect.android.utilities.ResponseMessageParser;
 import org.opendatakit.httpclientandroidlib.Header;
 import org.opendatakit.httpclientandroidlib.HttpEntity;
 import org.opendatakit.httpclientandroidlib.HttpHost;
@@ -150,7 +149,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
 
     @Override
     public @NonNull
-    HttpGetResult get(@NonNull URI uri, @Nullable final String contentType, @Nullable HttpCredentialsInterface credentials) throws Exception {
+    HttpGetResult executeGetRequest(@NonNull URI uri, @Nullable final String contentType, @Nullable HttpCredentialsInterface credentials) throws Exception {
         addCredentialsForHost(uri, credentials);
         clearCookieStore();
 
@@ -233,7 +232,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
     }
 
     @Override
-    public @NonNull HttpHeadResult head(@NonNull URI uri, @Nullable HttpCredentialsInterface credentials) throws Exception {
+    public @NonNull HttpHeadResult executeHeadRequest(@NonNull URI uri, @Nullable HttpCredentialsInterface credentials) throws Exception {
         addCredentialsForHost(uri, credentials);
         clearCookieStore();
 
@@ -294,10 +293,11 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
     }
 
     @Override
-    public @NonNull ResponseMessageParser uploadSubmissionFile(@NonNull List<File> fileList,
-                                                      @NonNull File submissionFile,
-                                                      @NonNull URI uri,
-                                                      @Nullable HttpCredentialsInterface credentials) throws IOException {
+    public @NonNull HttpPostResult uploadSubmissionFile(@NonNull List<File> fileList,
+                                                        @NonNull File submissionFile,
+                                                        @NonNull URI uri,
+                                                        @Nullable HttpCredentialsInterface credentials,
+                                                        @NonNull long contentLength) throws IOException {
         addCredentialsForHost(uri, credentials);
         clearCookieStore();
 
@@ -308,7 +308,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
             enablePreemptiveBasicAuth(uri.getHost());
         }
 
-        ResponseMessageParser messageParser = null;
+        HttpPostResult postResult = null;
 
         boolean first = true;
         int fileIndex = 0;
@@ -353,7 +353,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
                 // we've added at least one attachment to the request...
                 if (fileIndex + 1 < fileList.size()) {
                     if ((fileIndex - lastFileIndex + 1 > 100) || (byteCount + fileList.get(fileIndex + 1).length()
-                            > 10000000L)) {
+                            > contentLength)) {
                         // the next file would exceed the 10MB threshold...
                         Timber.i("Extremely long post is being split into multiple posts");
                         try {
@@ -382,10 +382,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
                 HttpEntity httpEntity = response.getEntity();
                 Timber.i("Response code:%d", responseCode);
 
-                messageParser = new ResponseMessageParser(
-                        EntityUtils.toString(httpEntity),
-                        responseCode,
-                        response.getStatusLine().getReasonPhrase());
+                postResult = new HttpPostResult(EntityUtils.toString(httpEntity), responseCode, response.getStatusLine().getReasonPhrase());
 
                 discardEntityBytes(response);
 
@@ -394,7 +391,7 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
                 }
 
                 if (responseCode != HttpStatus.SC_CREATED && responseCode != HttpStatus.SC_ACCEPTED) {
-                    return messageParser;
+                    return postResult;
                 }
 
             } catch (IOException e) {
@@ -414,7 +411,18 @@ public class HttpClientConnection implements OpenRosaHttpInterface {
             }
         }
 
-        return messageParser;
+        return postResult;
+    }
+
+    /**
+     * HttpPostResult - This is just stubbed out for now, implemented when we move to OkHttpConnection
+     * @param uri of which to post
+     * @param credentials to use on this post request
+     * @return null
+     * @throws Exception not used
+     */
+    public HttpPostResult executePostRequest(@NonNull URI uri, @Nullable HttpCredentialsInterface credentials) throws Exception {
+        return new HttpPostResult("", 0, "");
     }
 
     private void addCredentialsForHost(@NonNull URI uri, @Nullable HttpCredentialsInterface credentials) {
